@@ -1,0 +1,220 @@
+{
+ "notes": {
+  "type": "object",
+  "properties": {
+   "purpose": {
+    "type": "string"
+   },
+   "executive_summary": {
+    "type": "string"
+   },
+   "topics": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "title": {
+       "type": "string"
+      },
+      "details": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "required": [
+      "title",
+      "details"
+     ]
+    }
+   },
+   "decisions": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "decision": {
+       "type": "string"
+      },
+      "timestamp": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "decision",
+      "timestamp"
+     ]
+    }
+   },
+   "action_items": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "task": {
+       "type": "string"
+      },
+      "owner": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "due": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "priority": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "high",
+        "medium",
+        "low",
+        null
+       ]
+      },
+      "timestamp": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "task",
+      "owner",
+      "due",
+      "priority",
+      "timestamp"
+     ]
+    }
+   },
+   "open_questions": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "next_steps": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "quotes": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "speaker": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "quote": {
+       "type": "string"
+      },
+      "timestamp": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "speaker",
+      "quote",
+      "timestamp"
+     ]
+    }
+   }
+  },
+  "required": [
+   "purpose",
+   "executive_summary",
+   "topics",
+   "decisions",
+   "action_items",
+   "open_questions",
+   "next_steps",
+   "quotes"
+  ]
+ },
+ "mindmap": {
+  "type": "object",
+  "properties": {
+   "label": {
+    "type": "string"
+   },
+   "children": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "label": {
+       "type": "string"
+      },
+      "children": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "label": {
+          "type": "string"
+         },
+         "children": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "label": {
+             "type": "string"
+            }
+           },
+           "required": [
+            "label"
+           ]
+          }
+         }
+        },
+        "required": [
+         "label",
+         "children"
+        ]
+       }
+      }
+     },
+     "required": [
+      "label",
+      "children"
+     ]
+    }
+   }
+  },
+  "required": [
+   "label",
+   "children"
+  ]
+ },
+ "title": {
+  "type": "object",
+  "properties": {
+   "title": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "title"
+  ]
+ }
+}

@@ -1,0 +1,5 @@
+Suggest a short, specific title (3 to 8 words) for this meeting based on what was discussed, such as "Weekly Staff Planning Meeting" or "Youth Retreat Budget Review".
+Do not include a date. Do not use quotation marks. Return JSON: {"title": "..."}
+
+MEETING NOTES:
+{{NOTES}}

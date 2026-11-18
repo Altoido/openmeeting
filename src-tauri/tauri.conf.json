@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "OpenMeeting Notes",
+  "version": "1.0.0",
+  "identifier": "app.openmeetingnotes.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "OpenMeeting Notes",
+        "width": 1300,
+        "height": 840,
+        "minWidth": 1000,
+        "minHeight": 640,
+        "label": "main"
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$DATA/OpenMeeting Notes/**",
+          "$HOME/**"
+        ]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "app",
+      "dmg",
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/whisper-cli",
+      "binaries/llama-server"
+    ],
+    "resources": {
+      "resources/prompts/": "prompts/",
+      "resources/licenses/": "licenses/"
+    },
+    "category": "Productivity",
+    "shortDescription": "Free, offline meeting notes",
+    "copyright": "MIT License. Uses whisper.cpp and llama.cpp (MIT).",
+    "macOS": {
+      "minimumSystemVersion": "13.0",
+      "entitlements": "entitlements.plist",
+      "signingIdentity": "-"
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

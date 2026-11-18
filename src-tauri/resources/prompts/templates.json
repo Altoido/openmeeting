@@ -1,0 +1,72 @@
+[
+  {
+    "id": "general",
+    "name": "General Meeting Notes",
+    "icon": "doc.text",
+    "description": "Balanced notes for any meeting.",
+    "instructions": "Sections (use exactly these headings, in this order):\n## Overview\n(2–4 sentence executive summary, then one line stating the main purpose of the meeting.)\n## Key Discussion Points\n(one bullet per topic: **topic in bold** followed by the main ideas, observations and relevant supporting context (sub-bullets allowed).)\n## Decisions Made\n(bullets.)\n## Action Items\n(a Markdown checklist: \"- [ ] Task — Owner: … — Due: … — Priority: …\" (omit Priority when not given).)\n## Outstanding Questions\n(bullets.)\n## Next Steps\n(bullets; only follow-ups, meetings or deadlines actually mentioned.)\n## Important Quotes\n(bullets: > \"quote\" — speaker [timestamp].)\n## Detailed Meeting Notes\n(a thorough chronological account, one ### subheading per topic with paragraphs or bullets capturing all substantive details.)"
+  },
+  {
+    "id": "executive",
+    "name": "Executive Summary",
+    "icon": "briefcase",
+    "description": "One-page brief for leaders who were not there.",
+    "instructions": "Write for a busy executive who was not present. Keep the whole document under 350 words.\nSections (use exactly these headings, in this order):\n## Bottom Line\n(2–3 sentences: what this meeting means and what matters most.)\n## Key Outcomes\n(at most 5 bullets: decisions and conclusions.)\n## Risks & Concerns\n(bullets of risks, blockers or disagreements raised.)\n## Asks & Owners\n(bullets: what needs to happen and who owns it (\"owner not specified\" if unknown).)\n## Timeline\n(dates and deadlines actually mentioned.)"
+  },
+  {
+    "id": "staff",
+    "name": "Staff Meeting",
+    "icon": "person.3",
+    "description": "Team updates, assignments and follow-ups.",
+    "instructions": "Sections (use exactly these headings, in this order):\n## Summary\n(3 sentences.)\n## Team Updates\n(group updates by person or area/department when the transcript makes that clear; otherwise by topic. Bullets.)\n## Announcements\n(bullets.)\n## Decisions\n(bullets.)\n## Assignments\n(a Markdown table with columns: Task | Owner | Due | Notes. Use \"—\" for unknown values.)\n## Calendar & Deadlines\n(dates and events mentioned.)\n## Items for Next Meeting\n(open questions and items deferred.)"
+  },
+  {
+    "id": "ministry",
+    "name": "Church or Ministry Meeting",
+    "icon": "building.columns",
+    "description": "Ministry teams, elder/deacon boards, church staff.",
+    "instructions": "Write with warmth and clarity, appropriate for a church or ministry team.\nSections (use exactly these headings, in this order):\n## Overview\n(purpose of the gathering and a short summary.)\n## Prayer Requests & Praises\n(only if prayer requests, praises or pastoral concerns were shared; keep sensitive personal details brief and discreet.)\n## Ministry Updates\n(bullets grouped by ministry area (e.g., worship, youth, children, outreach, missions, facilities, finance) as discussed.)\n## Discipleship & Spiritual Formation\n(any discussion of discipleship, teaching, scripture or spiritual growth (\"None mentioned.\" if absent).)\n## Events & Calendar\n(upcoming services, events, dates and volunteer needs mentioned.)\n## Decisions\n(bullets.)\n## Action Items\n(Markdown checklist with owner and due date when given.)\n## Follow-Up & Care\n(people or situations needing follow-up, as mentioned.)\n## Scripture & Quotes\n(scripture references and notable statements with timestamps, only if present.)"
+  },
+  {
+    "id": "creative",
+    "name": "Creative Project Meeting",
+    "icon": "paintpalette",
+    "description": "Design, content, media and production work.",
+    "instructions": "Sections (use exactly these headings, in this order):\n## Project Snapshot\n(the project, its goal and the current status as discussed.)\n## Creative Direction\n(vision, tone, style, audience, references and inspirations mentioned.)\n## Feedback\n(bullets of feedback given, grouped as **Keep**, **Change**, **Explore** where the transcript supports it.)\n## Decisions\n(bullets.)\n## Deliverables & Owners\n(Markdown table: Deliverable | Owner | Due | Status.)\n## Open Creative Questions\n(bullets.)\n## Next Review\n(next steps and review dates mentioned.)"
+  },
+  {
+    "id": "brainstorm",
+    "name": "Brainstorming Session",
+    "icon": "lightbulb",
+    "description": "Captures every idea, then what rose to the top.",
+    "instructions": "Sections (use exactly these headings, in this order):\n## Challenge\n(the problem or question the group was brainstorming about.)\n## All Ideas\n(capture EVERY distinct idea raised, grouped under ### theme subheadings. Each idea as a bullet with a one-line description and who suggested it if a speaker label is available.)\n## Most Promising Ideas\n(ideas the group showed most energy for or agreed to pursue, with the reasons given.)\n## Concerns & Constraints\n(limitations, risks or objections raised.)\n## Next Steps\n(what will happen with the ideas, as mentioned.)"
+  },
+  {
+    "id": "interview",
+    "name": "Interview Notes",
+    "icon": "person.crop.rectangle",
+    "description": "Q&A format for interviews and conversations.",
+    "instructions": "Sections (use exactly these headings, in this order):\n## Interview Overview\n(who was interviewed (only names actually stated; otherwise use the speaker labels), the role or subject, and the purpose.)\n## Questions & Answers\n(for each main question: **Q:** the question (paraphrased) [timestamp], then **A:** a faithful summary of the answer with key specifics.)\n## Key Insights\n(the most important things learned.)\n## Notable Quotes\n(verbatim quotes with timestamps.)\n## Strengths & Concerns\n(only if evaluative points were explicitly discussed; otherwise \"None mentioned.\".)\n## Follow-Up\n(next steps mentioned.)"
+  },
+  {
+    "id": "lecture",
+    "name": "Lecture or Training Notes",
+    "icon": "graduationcap",
+    "description": "Study notes for classes, sermons, trainings.",
+    "instructions": "Write as clear study notes.\nSections (use exactly these headings, in this order):\n## Topic & Overview\n(the subject and a short summary of the session.)\n## Key Concepts\n(each concept in **bold** with a concise explanation as presented.)\n## Detailed Notes\n(structured outline following the order of the session, using ### subheadings and nested bullets; include examples, definitions, steps and figures that were given.)\n## Examples & Illustrations\n(stories, examples or demonstrations used.)\n## Key Takeaways\n(3–7 bullets.)\n## Review Questions\n(3–5 questions a learner could use to review this material, answerable from the session content.)\n## Assignments & Resources\n(homework, readings, resources or deadlines mentioned.)"
+  },
+  {
+    "id": "minutes",
+    "name": "Detailed Minutes",
+    "icon": "list.bullet.rectangle",
+    "description": "Formal minutes in agenda order.",
+    "instructions": "Write formal meeting minutes in the third person and past tense.\nSections (use exactly these headings, in this order):\n## Meeting Details\n(date, duration and attendees/speakers as listed in the meeting information (do not add others).)\n## Call to Order & Opening\n(how the meeting began, if discussed.)\n## Agenda Items\n(for each item in the order discussed: ### Item title [start timestamp], then **Discussion:** a factual paragraph; **Outcome:** the decision, motion or result (or \"No decision recorded.\").)\n## Motions & Votes\n(any motions, who moved/seconded and results, only if explicitly stated.)\n## Action Items\n(Markdown table: # | Action | Responsible | Due.)\n## Next Meeting\n(date/time if mentioned.)\n## Adjournment\n(if mentioned.)"
+  },
+  {
+    "id": "actions",
+    "name": "Action Items Only",
+    "icon": "checklist",
+    "description": "Just the to-do list.",
+    "instructions": "Use only these sections (exactly these headings, in this order):\n## Action Items\n(a Markdown checklist. One line per task: \"- [ ] **Task** — Owner: … — Due: … [timestamp]\". Write \"Owner: not specified\" or \"Due: not specified\" when unknown. Order by due date when known, then by order discussed.)\n## Waiting On / Dependencies\n(tasks that depend on someone else or on a decision, if any.)\nDo not include any other sections or commentary."
+  }
+]

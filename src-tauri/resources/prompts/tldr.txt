@@ -1,0 +1,23 @@
+Write a TL;DR of this meeting for someone who has one minute to read it. It must fit on ONE printed page: no more than {{MAX_WORDS}} words in total.
+
+MEETING INFORMATION (accurate — use as given):
+{{META}}
+
+Use exactly this format and nothing else:
+
+**Bottom line:** one or two sentences with the single most important outcome of the meeting.
+
+## Key Points
+(3 to 5 bullets, one short line each)
+## Decisions
+(bullets — write "None recorded." if there were none)
+## Action Items
+(a checklist, at most 6 lines: "- [ ] Task — Owner — Due". Leave out Owner or Due when the notes don't give them. If there are more than 6 tasks, list the most important and end with "+N more in the full notes")
+## Open Questions
+(at most 3 bullets — write "None." if there were none)
+
+Rules: use only facts from the notes below. Do not invent names, owners, dates or decisions. No quotes, no timestamps, no introduction, no closing remarks, and do not add a title.
+
+EXTRACTED NOTES (JSON):
+{{NOTES}}
+{{USER_NOTES}}

@@ -1,0 +1,17 @@
+Below is part {{PART}} of {{TOTAL}} of a meeting transcript, covering {{RANGE}}.
+{{CONTEXT}}
+Read it carefully and extract structured notes as JSON with these fields:
+
+- "purpose": the stated or clearly evident purpose of the meeting, in one sentence ("" if not evident in this part).
+- "executive_summary": 2–4 sentences summarizing what happened in this part.
+- "topics": every distinct subject discussed, in the order discussed. For each: "title" (short) and "details" (bullet-style facts: what was said, proposals, reasons, concerns, numbers, names, examples). Be thorough — these notes are the only record that later steps will see.
+- "decisions": things the group explicitly agreed on or concluded. Each with "decision" and "timestamp" of where it was agreed.
+- "action_items": concrete tasks someone will do. Each with "task"; "owner" ONLY if a specific person clearly took on or was given the task (otherwise null); "due" ONLY if a deadline or time frame was stated, in the words used (e.g. "by Friday", "November 19") — never a transcript timestamp (otherwise null); "priority" ONLY if urgency or importance was expressed ("high", "medium" or "low", otherwise null); and "timestamp".
+- "open_questions": questions raised that were not answered or issues needing more discussion.
+- "next_steps": follow-ups, future meetings, or deadlines that were actually mentioned.
+- "quotes": up to 4 short, noteworthy verbatim statements. Each with "speaker" (the label used in the transcript, or null), "quote" (exact words) and "timestamp".
+
+Rules: Use empty lists when nothing applies. Do not repeat the same item in several fields unless it truly belongs there. Copy timestamps from the transcript lines. Do not invent anything.
+
+TRANSCRIPT:
+{{TRANSCRIPT}}

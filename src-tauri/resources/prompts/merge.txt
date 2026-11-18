@@ -1,0 +1,13 @@
+Below are structured notes that were extracted, in order, from {{COUNT}} consecutive parts of ONE meeting.
+Merge them into a single set of notes with exactly the same JSON structure.
+
+- "purpose": one sentence for the whole meeting ("" if never evident).
+- "executive_summary": 3–6 sentences covering the whole meeting.
+- "topics": merge topics that are the same subject; keep chronological order; keep every distinct, informative detail (numbers, names, reasons). Remove only true duplicates.
+- "decisions", "action_items", "open_questions", "next_steps": keep EVERY distinct item from every part; merge exact duplicates only. Remove an open question only if a later part clearly answered it. Keep owners, due dates, priorities and timestamps exactly as given (null stays null).
+- "quotes": keep the most noteworthy, at most 8.
+
+Do not add anything that is not in the notes below.
+
+NOTES:
+{{NOTES}}

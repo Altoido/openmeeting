@@ -1,0 +1,19 @@
+Write the meeting notes document for the meeting below.
+
+MEETING INFORMATION (accurate — use as given):
+{{META}}
+
+FORMAT TO FOLLOW — "{{TEMPLATE_NAME}}":
+{{TEMPLATE}}
+
+General rules:
+- Write in clear, professional Markdown. Use exactly the "## " section headings listed in the format, in that order, and nothing else as "## " headings. Text in parentheses under a heading describes what to write there — follow it, never copy it.
+- Do not add a document title (it is added automatically) and do not repeat these rules in the document.
+- Base every statement on the extracted notes{{TRANSCRIPT_CLAUSE}}. Never invent people, decisions, tasks, owners, deadlines or facts.
+- If a section has no supporting content, write "None mentioned." under it.
+- For action items, show the owner and due date only when they appear in the notes; otherwise write "Owner: not specified" / "Due: not specified" only if the format asks for those fields. A due date is a date or deadline that was said in the meeting — never a [timestamp].
+- Include timestamps like [00:14:32] where the notes provide them and the format calls for them.
+
+EXTRACTED NOTES (JSON):
+{{NOTES}}
+{{USER_NOTES}}{{TRANSCRIPT}}

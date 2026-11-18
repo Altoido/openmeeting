@@ -1,0 +1,68 @@
+name: Build installers
+
+# Runs when you push a version tag (e.g. v1.0.1) or click "Run workflow" on GitHub.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-14          # Apple Silicon Macs
+            target: aarch64-apple-darwin
+          - platform: windows-latest    # Windows 10/11 (64-bit)
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: "${{ matrix.target }}" }
+
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: "src-tauri -> target" }
+
+      - name: Cache engines
+        uses: actions/cache@v4
+        with:
+          path: src-tauri/binaries
+          key: engines-${{ matrix.target }}-${{ hashFiles('scripts/build-engines.sh') }}
+
+      - name: Build local AI engines (whisper.cpp, llama.cpp)
+        shell: bash
+        env: { TARGET_TRIPLE: "${{ matrix.target }}" }
+        run: |
+          if ls src-tauri/binaries/llama-server-${{ matrix.target }}* >/dev/null 2>&1; then echo "engines cached"; exit 0; fi
+          ./scripts/build-engines.sh
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Run core tests
+        working-directory: src-tauri
+        run: cargo test --lib --target ${{ matrix.target }}
+
+      - name: Build installer and attach to a GitHub release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}
+          releaseName: "OpenMeeting Notes ${{ github.ref_type == 'tag' && github.ref_name || format('build {0}', github.run_number) }}"
+          releaseBody: |
+            **Mac (Apple Silicon):** download the `.dmg`, open it, drag OpenMeeting Notes into Applications. First launch: right-click the app → Open → Open (on macOS 15+: System Settings → Privacy & Security → Open Anyway).
+            **Windows 10/11:** download the `-setup.exe` and run it. If "Windows protected your PC" appears, click More info → Run anyway.
+            Then follow the setup screen to download the AI models (one time). See the README for details.
+          releaseDraft: false
+          prerelease: ${{ github.ref_type != 'tag' }}
+          args: --target ${{ matrix.target }}

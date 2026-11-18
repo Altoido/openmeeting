@@ -1,0 +1,8 @@
+Turn these meeting notes into a mind map.
+Return JSON with a root node: {"label": "<central meeting topic, max 6 words>", "children": [...]}.
+- 3 to 7 main branches for the key discussion areas (decisions and action items may be their own branches if present).
+- Each branch has 0 to 6 children with short labels (max 8 words); children may have their own children (max depth 3).
+- Use only information from the notes. Do not invent anything.
+
+MEETING NOTES:
+{{NOTES}}
