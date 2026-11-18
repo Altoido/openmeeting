@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, listen, Meeting, Collection, Progress, Settings, SysInfo, duration, dateText, errText } from "./api";
+import { api, listen, Update, Meeting, Collection, Progress, Settings, SysInfo, duration, dateText, errText } from "./api";
 import { MeetingDetail } from "./views/Detail";
 import { RecordView, ImportView } from "./views/Record";
 import { ActionsView, AskView } from "./views/Ask";
 import { SettingsView, SetupWizard } from "./views/Settings";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { confirm } from "@tauri-apps/plugin-dialog";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 export type Page = "record" | "import" | "all" | "favorites" | "actions" | "ask" | "archive" | "settings" | `col:${string}`;
 
@@ -35,6 +36,7 @@ export default function App() {
   const [setup, setSetup] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [newCol, setNewCol] = useState<string | null>(null);
+  const [update, setUpdate] = useState<Update | null>(null);
 
   const reload = useCallback(async () => {
     const r = await api.list(); setMeetings(r.meetings); setCollections(r.collections); setOpenActions(r.openActions);
@@ -43,6 +45,7 @@ export default function App() {
 
   useEffect(() => {
     reload(); api.progress().then(setProgress); api.systemInfo().then(setSys);
+    setTimeout(() => api.checkUpdate(false).then(setUpdate).catch(() => {}), 4000);
     api.settings().then(s => { setSettingsState(s); api.models().then(m => { if (!s.setupCompleted || !m.activeWhisper) setSetup(true); }); });
     const un = [listen("meetings-changed", () => reload()), listen<Progress>("progress", e => setProgress(e.payload))];
     const dd = getCurrentWebview().onDragDropEvent(e => {
@@ -107,6 +110,13 @@ export default function App() {
         <div className="local" title="Recording, transcription and AI all run on this computer. Nothing is uploaded.">🔒 On-device AI</div>
       </aside>
       <main className="main">
+        {update && <div className="updatebar">
+          <b>OpenMeeting Notes {update.version} is available</b><span className="muted small">You have {update.current}. Your meetings and models are kept when you update.</span>
+          <div className="grow" />
+          <button className="primary" onClick={() => openUrl(update.url)}>Download</button>
+          <button onClick={() => setUpdate(null)}>Later</button>
+          <button className="link" onClick={() => { setSettings({ ...settings!, skippedVersion: update.version }); setUpdate(null); }}>Skip this version</button>
+        </div>}
         {page === "record" && <RecordView ctx={ctx} />}
         {page === "import" && <ImportView ctx={ctx} />}
         {page === "actions" && <ActionsView ctx={ctx} />}

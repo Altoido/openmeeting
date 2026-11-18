@@ -1,6 +1,7 @@
 name: Build installers
 
-# Runs when you push a version tag (e.g. v1.0.1) or click "Run workflow" on GitHub.
+# Click "Run workflow" on GitHub's Actions tab. The release is named after the version in package.json
+# (e.g. 1.1.0). Running it again for the same version replaces that release's installers.
 on:
   push:
     tags: ["v*"]
@@ -15,11 +16,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: macos-latest          # Apple Silicon Macs
+          - platform: macos-latest      # Apple Silicon Macs (GitHub retires old macOS versions; "latest" keeps working)
             target: aarch64-apple-darwin
           - platform: windows-latest    # Windows 10/11 (64-bit)
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.platform }}
+    env:
+      OMN_UPDATE_REPO: ${{ github.repository }}   # lets the app check this repo's Releases for new versions
     steps:
       - uses: actions/checkout@v4
 
@@ -57,12 +60,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}
-          releaseName: "OpenMeeting Notes ${{ github.ref_type == 'tag' && github.ref_name || format('build {0}', github.run_number) }}"
+          tagName: v__VERSION__                    # version comes from package.json, e.g. v1.1.0
+          releaseName: "OpenMeeting Notes __VERSION__"
           releaseBody: |
             **Mac (Apple Silicon):** download the `.dmg`, open it, drag OpenMeeting Notes into Applications. First launch: right-click the app → Open → Open (on macOS 15+: System Settings → Privacy & Security → Open Anyway).
             **Windows 10/11:** download the `-setup.exe` and run it. If "Windows protected your PC" appears, click More info → Run anyway.
             Then follow the setup screen to download the AI models (one time). See the README for details.
           releaseDraft: false
-          prerelease: ${{ github.ref_type != 'tag' }}
+          prerelease: false
           args: --target ${{ matrix.target }}

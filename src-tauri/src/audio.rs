@@ -181,3 +181,18 @@ mod tests {
         assert_eq!(r, 16_000); assert!((s.len() as i64 - 48_000).abs() < 20);
     }
 }
+
+#[cfg(test)]
+mod format_tests {
+    /// Run with OMN_TEST_MEDIA=/tmp to decode real MP3/M4A/MP4/FLAC files made with ffmpeg.
+    #[test]
+    fn decode_common_formats() {
+        let Ok(dir) = std::env::var("OMN_TEST_MEDIA") else { return };
+        for f in ["t.mp3", "t.m4a", "t.mp4", "t.flac"] {
+            let out = std::env::temp_dir().join(format!("omn-{f}.wav"));
+            let p = super::prepare(&std::path::Path::new(&dir).join(f), &out, false, &|| false, |_| {}).unwrap_or_else(|e| panic!("{f}: {e}"));
+            eprintln!("{f}: {:.2}s", p.duration);
+            assert!((p.duration - 36.0).abs() < 1.0, "{f} duration {}", p.duration);
+        }
+    }
+}

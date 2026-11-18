@@ -21,6 +21,7 @@ On first launch the setup screen recommends AI models for that computer and down
 - Import: MP3, WAV, M4A/AAC, FLAC, OGG, MP4, MOV (decoded on-device).
 - Transcription: whisper.cpp, ~99 languages, 10-minute checkpointed passes, silence detection, timestamps, click-to-play, editing (original kept), speaker labels (automatic Me/Remote for two-source recordings; manual otherwise).
 - AI (llama.cpp, Qwen3 models): one-page **TL;DR**, 10 summary templates + custom templates, hierarchical summarization for long meetings, action items, AI titles, mind maps, Ask AI about one meeting or the whole library.
+- Updates: a "new version available" prompt linked to this repository's Releases.
 - Library: search across titles, dates, transcripts, summaries and notes (SQLite FTS5), tags, collections, favorites, archive.
 - Export: PDF (print → Save as PDF), Word, Markdown, text, SRT, VTT, original audio.
 
@@ -31,7 +32,13 @@ On first launch the setup screen recommends AI models for that computer and down
 2. runs the core tests,
 3. builds the app with Tauri and attaches the `.dmg` and `-setup.exe` to a GitHub Release.
 
-Trigger it from the **Actions** tab → *Build installers* → **Run workflow**, or push a tag like `v1.0.1`.
+Trigger it from the **Actions** tab → *Build installers* → **Run workflow**. The release is named after the version in `package.json` (e.g. **1.1.0**); running it again for the same version replaces that release's installers.
+
+## Updates
+
+The app checks this repository's latest Release about twice a day and shows a "new version available" bar with a Download button (Settings → About can turn this off or check now). Nothing is installed automatically; installing a new version over an old one keeps all meetings and models.
+
+To publish a new version: bump `version` in `package.json` (the only place it's set), commit, push, then Run workflow.
 
 ## Develop locally
 

@@ -12,7 +12,7 @@ pub struct Info { pub os: String, pub arch: String, pub memory_gb: f64, pub cpus
 
 pub fn info() -> Info {
     Info {
-        os: format!("{} {}", sysinfo::System::name().unwrap_or_default(), sysinfo::System::os_version().unwrap_or_default()),
+        os: sysinfo::System::long_os_version().unwrap_or_else(|| format!("{} {}", sysinfo::System::name().unwrap_or_default(), sysinfo::System::os_version().unwrap_or_default())),
         arch: std::env::consts::ARCH.into(),
         memory_gb: memory_gb(),
         cpus: std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4),

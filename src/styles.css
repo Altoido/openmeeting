@@ -71,3 +71,4 @@ a { color:var(--accent); cursor:pointer; } code { font-size:12px; } .mono { font
 .mmlabel { font-size:12px; line-height:1.2; display:flex; align-items:center; justify-content:center; text-align:center; height:100%; color:var(--text); overflow:hidden; } .mmlabel.d0 { color:#fff; font-weight:700; font-size:13px; } .mmlabel.d1 { font-weight:600; }
 #print-root { display:none; }
 @media print { #root { display:none; } #print-root { display:block; color:#000; } .printdoc { font-size:11pt; } .printdoc h1 { font-size:18pt; margin:0; } .printdoc .sub { color:#555; margin-bottom:10pt; } .md h2 { color:#1f3a5f; } @page { margin:0.6in; } }
+.updatebar { display:flex; gap:10px; align-items:center; padding:9px 16px; background:var(--accent-weak); border-bottom:1px solid var(--line); }

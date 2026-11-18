@@ -24,7 +24,9 @@ export interface RecStatus { active: boolean; paused: boolean; elapsed: number; 
 export interface Settings {
   whisperModel: string; llmModel: string; useVad: boolean; language: string; autoTranscribe: boolean; autoSummarize: boolean; autoTitle: boolean;
   defaultTemplate: string; recordingSource: string; inputDevice: string; llmIdleMinutes: number; setupCompleted: boolean; consentDismissed: boolean;
+  checkUpdates: boolean; lastUpdateCheck: number; skippedVersion: string;
 }
+export interface Update { version: string; current: string; url: string; notes: string }
 export interface ModelSpec { id: string; kind: string; name: string; fileName: string; url: string; approxBytes: number; sha1?: string; license: string; summary: string; context: number; minRamGb: number }
 export interface ModelsState { catalog: ModelSpec[]; installed: Record<string, { file: string; bytes: number }[]>; activeWhisper?: string | null; activeLlm?: string | null }
 export interface SysInfo {
@@ -41,7 +43,7 @@ export const api = {
   save: (m: Meeting) => invoke("meeting_save", { m }),
   remove: (id: string) => invoke("meeting_delete", { id }),
   search: (q: string) => invoke<{ meetingId: string; kind: string; ref: string; snippet: string }[]>("search", { q }),
-  importFiles: (paths: string[]) => invoke<string[]>("import_files", { paths_: paths }),
+  importFiles: (paths: string[]) => invoke<string[]>("import_files", { files: paths }),
   devices: () => invoke<string[]>("input_devices"),
   recStart: (title: string, source: string, device: string | null) => invoke<string>("record_start", { title, source, device }),
   recStatus: () => invoke<RecStatus>("record_status"),
@@ -83,6 +85,8 @@ export const api = {
   deleteModel: (kind: string, file: string) => invoke("model_delete", { kind, file }),
   importModel: (path: string, kind: string) => invoke<string>("model_import", { path, kind }),
   llmTest: () => invoke<string>("llm_test"),
+  checkUpdate: (manual: boolean) => invoke<Update | null>("check_update", { manual }),
+  version: () => invoke<string>("app_version"),
 };
 export { listen };
 

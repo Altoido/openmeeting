@@ -10,6 +10,7 @@ mod processor;
 mod recorder;
 mod settings;
 mod sysinfo;
+mod updates;
 
 use db::Db;
 use models::*;
@@ -67,9 +68,9 @@ fn meeting_delete(app: AppHandle, st: State<AppState>, id: String) {
 #[tauri::command] fn search(st: State<AppState>, q: String) -> Vec<SearchHit> { st.db.lock().unwrap().search(&q, None, None, 300, false) }
 
 #[tauri::command]
-fn import_files(app: AppHandle, st: State<AppState>, paths_: Vec<String>) -> R<Vec<String>> {
+fn import_files(app: AppHandle, st: State<AppState>, files: Vec<String>) -> R<Vec<String>> {
     let mut ids = vec![];
-    for p in paths_ {
+    for p in files {
         let src = PathBuf::from(&p);
         let id = uuid::Uuid::new_v4().to_string();
         let ext = src.extension().map(|x| x.to_string_lossy().to_lowercase()).unwrap_or_else(|| "audio".into());
@@ -284,6 +285,18 @@ async fn llm_test() -> R<String> {
     Ok(format!("✓ {:.1} s — “{}”", t.elapsed().as_secs_f64(), out.chars().take(120).collect::<String>()))
 }
 
+#[tauri::command]
+async fn check_update(app: AppHandle, manual: bool) -> R<Option<updates::Update>> {
+    let mut s = settings::get();
+    if !manual && (!s.check_updates || db::now() - s.last_update_check < 12.0 * 3600.0) { return Ok(None); }
+    let current = app.package_info().version.to_string();
+    let found = updates::check(&current).await.map_err(e)?;
+    s.last_update_check = db::now();
+    settings::set(s.clone());
+    Ok(found.filter(|u| manual || u.version != s.skipped_version))
+}
+#[tauri::command] fn app_version(app: AppHandle) -> String { app.package_info().version.to_string() }
+
 // ---------------------------------------------------------------- app
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -322,7 +335,7 @@ pub fn run() {
             segment_update, speaker_set, highlight_add, highlight_delete, summary_update, tldr_save, action_save, action_delete, actions_all,
             templates_list, custom_templates, template_save, template_delete, collection_save, collection_delete,
             ask, ask_cancel, chat_get, chat_clear, mindmap_generate, tldr_generate, export_file, export_markdown, export_text, export_audio, peaks,
-            print_page, write_base64, models_state, model_download, model_cancel, model_delete, model_import, llm_test
+            print_page, write_base64, check_update, app_version, models_state, model_download, model_cancel, model_delete, model_import, llm_test
         ])
         .run(tauri::generate_context!())
         .expect("error while running OpenMeeting Notes");

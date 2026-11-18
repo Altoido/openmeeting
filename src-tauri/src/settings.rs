@@ -20,12 +20,16 @@ pub struct Settings {
     pub llm_idle_minutes: u64,
     pub setup_completed: bool,
     pub consent_dismissed: bool,
+    pub check_updates: bool,
+    pub last_update_check: f64,
+    pub skipped_version: String,
 }
 impl Default for Settings {
     fn default() -> Self {
         Self { whisper_model: String::new(), llm_model: String::new(), use_vad: true, language: "auto".into(), auto_transcribe: true,
                auto_summarize: true, auto_title: true, default_template: "general".into(), recording_source: "microphone".into(),
-               input_device: String::new(), llm_idle_minutes: 10, setup_completed: false, consent_dismissed: false }
+               input_device: String::new(), llm_idle_minutes: 10, setup_completed: false, consent_dismissed: false,
+               check_updates: true, last_update_check: 0.0, skipped_version: String::new() }
     }
 }
 

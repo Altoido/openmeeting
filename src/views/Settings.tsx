@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { api, listen, ModelsState, ModelSpec, Template, bytes, errText } from "../api";
 import { Ctx } from "../App";
 
@@ -35,7 +36,7 @@ export function ModelsPanel({ ctx }: { ctx: Ctx }) {
   const row = (m: ModelSpec, rec: boolean) => <div key={m.id} className="mrow">
     <div className="grow"><b>{m.name}</b>{rec && <span className="pill">Recommended</span>}
       <div className="muted small">{m.summary} · {bytes(m.approxBytes)} · {m.license}</div>
-      {m.kind === "llm" && m.minRamGb > mem && <div className="warntext small">Needs about {m.minRamGb} GB of memory — likely too large for this computer.</div>}</div>
+      {m.kind === "llm" && m.minRamGb > Math.round(mem) && <div className="warntext small">Needs about {m.minRamGb} GB of memory — likely too large for this computer.</div>}</div>
     {dl[m.id] ? <div className="dl"><div className="bar"><div style={{ width: `${dl[m.id].total ? dl[m.id].received / dl[m.id].total * 100 : 2}%` }} /></div>
         <span className="small">{bytes(dl[m.id].received)}{dl[m.id].total ? ` of ${bytes(dl[m.id].total)}` : ""}</span><button onClick={() => api.cancelDownload(m.id)}>×</button></div>
       : isInstalled(m) ? <>{m.kind !== "vad" && <button disabled={active(m)} className={active(m) ? "ok" : ""} onClick={() => use(m)}>{active(m) ? "✓ In use" : "Use"}</button>}
@@ -106,14 +107,27 @@ export function SettingsView({ ctx }: { ctx: Ctx }) {
       </div></div>}
     </div>}
     {tab === "Privacy & Storage" && <div className="card">
-      <p>No account, subscription, telemetry, analytics or ads. Recordings, transcripts and notes stay on this computer. Transcription and AI run locally; the internet is used only when you click Download for a model. The AI engine listens only on this computer (127.0.0.1) with a private key.</p>
+      <p>No account, subscription, telemetry, analytics or ads. Recordings, transcripts and notes stay on this computer. Transcription and AI run locally. The internet is used only when you click Download for a model, and — if turned on in About — to check whether a new version of the app exists. The AI engine listens only on this computer (127.0.0.1) with a private key.</p>
       <p className="small">Library: <code>{ctx.sys?.libraryDir}</code></p><p className="small">Models: <code>{ctx.sys?.modelsDir}</code></p>
       <button onClick={() => ctx.sys && invoke("plugin:opener|reveal_item_in_dir", { path: ctx.sys.libraryDir })}>Show Library Folder</button>{" "}
       <button onClick={() => ctx.sys && invoke("plugin:opener|reveal_item_in_dir", { path: ctx.sys.modelsDir })}>Show Models Folder</button>
       <p className="muted small">Delete a meeting from its ⋯ menu. To delete everything, quit the app and delete the Library folder.</p>
     </div>}
-    {tab === "About" && <div className="card"><h3>OpenMeeting Notes 1.0</h3><p>Free, offline meeting recorder, transcriber and AI note-taker for macOS and Windows.</p>
+    {tab === "About" && <About ctx={ctx} />}
+    {tab === "About" && <div className="card"><p>Free, offline meeting recorder, transcriber and AI note-taker for macOS and Windows.</p>
       <p className="small">Built with whisper.cpp and llama.cpp (MIT License, the ggml authors), Tauri (MIT/Apache-2.0), Symphonia (MPL-2.0), cpal (Apache-2.0). Models are downloaded separately under their own licenses: Whisper (MIT), Silero VAD (MIT), Qwen3 (Apache 2.0).</p></div>}
+  </div>;
+}
+
+function About({ ctx }: { ctx: Ctx }) {
+  const [v, setV] = useState(""); const [msg, setMsg] = useState("");
+  useEffect(() => { api.version().then(setV); }, []);
+  const s = ctx.settings;
+  return <div className="card"><h3>OpenMeeting Notes {v}</h3>
+    <label className="small"><input type="checkbox" checked={s.checkUpdates} onChange={e => ctx.setSettings({ ...s, checkUpdates: e.target.checked })} /> Tell me when a new version is available</label>
+    <p className="muted small">Checks this app's public download page about twice a day. Nothing about you or your meetings is sent, and nothing is installed without you.</p>
+    <button onClick={async () => { setMsg("Checking…"); try { const u = await api.checkUpdate(true);
+      if (u) { setMsg(`Version ${u.version} is available.`); openUrl(u.url); } else setMsg("You have the latest version."); } catch (e) { setMsg(errText(e)); } }}>Check for Updates</button> <span className="small">{msg}</span>
   </div>;
 }
 
