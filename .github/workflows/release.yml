@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: macos-14          # Apple Silicon Macs
+          - platform: macos-latest          # Apple Silicon Macs
             target: aarch64-apple-darwin
           - platform: windows-latest    # Windows 10/11 (64-bit)
             target: x86_64-pc-windows-msvc
