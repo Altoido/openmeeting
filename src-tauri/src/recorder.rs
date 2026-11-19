@@ -36,7 +36,7 @@ struct Shared {
     warning: Mutex<Option<String>>,
 }
 
-pub struct Session { shared: Arc<Shared>, pub manifest: Manifest, pub folder: PathBuf, threads: Vec<std::thread::JoinHandle<()>> }
+pub struct Session { shared: Arc<Shared>, pub manifest: Manifest, pub folder: PathBuf, threads: Vec<std::thread::JoinHandle<()>>, _awake: crate::awake::Guard }
 
 fn bump_peak(a: &AtomicU32, v: f32) { let cur = f32::from_bits(a.load(Ordering::Relaxed)); if v > cur { a.store(v.to_bits(), Ordering::Relaxed); } }
 fn meter(rms: f32) -> f32 { if rms <= 0.0 { 0.0 } else { ((20.0 * rms.log10() + 60.0) / 60.0).clamp(0.0, 1.0) } }
@@ -169,7 +169,7 @@ pub fn start(meeting_id: &str, title: &str, source: &str, device_name: Option<St
         }
     });
     paths_log_start(&manifest);
-    Ok(Session { shared, manifest, folder, threads: vec![capture, writer] })
+    Ok(Session { shared, manifest, folder, threads: vec![capture, writer], _awake: crate::awake::hold("recording") })
 }
 
 fn paths_log_start(m: &Manifest) { crate::paths::log(&format!("Recording started ({}) {}", m.source, m.meeting_id)); }

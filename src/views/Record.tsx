@@ -55,6 +55,7 @@ export function RecordView({ ctx }: { ctx: Ctx }) {
         <button className="big stop" onClick={stop}>■ Stop & Save</button>
       </div>
       {st.warning && <p className="warntext">{st.warning}</p>}
+      <p className="muted small">The computer is kept awake while recording. On a laptop, keep the lid open and plug it in for long meetings.</p>
     </div>
     <div className="card">
       <div className="toolbar"><b>Notes</b><div className="grow" />

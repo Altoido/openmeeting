@@ -1,6 +1,6 @@
 [package]
 name = "openmeeting-notes"
-version = "1.2.0"
+version = "1.4.0"
 description = "Free, offline meeting recorder, transcriber and AI note-taker"
 edition = "2021"
 
@@ -39,3 +39,6 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 [profile.release]
 opt-level = 3
 lto = "thin"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_System_Power"] }

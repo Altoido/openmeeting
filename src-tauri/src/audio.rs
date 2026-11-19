@@ -49,28 +49,37 @@ pub fn prepare(input: &Path, output: &Path, stereo_energy: bool, cancel: &dyn Fn
     let track = format.tracks().iter().find(|t| t.codec_params.codec != CODEC_TYPE_NULL && t.codec_params.sample_rate.is_some())
         .ok_or_else(|| anyhow!("This file does not contain a supported audio track."))?;
     let track_id = track.id;
-    let rate = track.codec_params.sample_rate.unwrap_or(48_000) as f64;
-    let total = track.codec_params.n_frames.map(|n| n as f64 / rate).unwrap_or(0.0);
+    let container_rate = track.codec_params.sample_rate.unwrap_or(48_000) as f64;
+    let total = track.codec_params.n_frames.map(|n| n as f64 / container_rate).unwrap_or(0.0);
     let mut decoder = symphonia::default::get_codecs().make(&track.codec_params, &DecoderOptions::default())
         .map_err(|e| anyhow!("Unsupported audio codec ({e})."))?;
     let spec = hound::WavSpec { channels: 1, sample_rate: RATE, bits_per_sample: 16, sample_format: hound::SampleFormat::Int };
     let mut w = hound::WavWriter::create(output, spec)?;
-    let mut rs = Resampler::new(rate, RATE as f64);
+    // The resampler follows the rate the decoder actually outputs. HE-AAC files (common from phones)
+    // advertise 48 kHz but decode at 24 kHz here; trusting the container rate would halve the duration.
+    let mut rate = 0f64;
+    let mut rs = Resampler::new(container_rate, RATE as f64);
     let (mut written, mut last_rep) = (0usize, 0.0);
     let (mut le, mut re) = (vec![], vec![]);
     let (mut wl, mut wr, mut wn) = (0f32, 0f32, 0usize);
-    let win = (rate / 10.0) as usize;
+    let mut win = 4800usize;
     loop {
         if cancel() { bail!("cancelled"); }
         let packet = match format.next_packet() {
             Ok(p) => p,
             Err(symphonia::core::errors::Error::IoError(e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
-            Err(symphonia::core::errors::Error::ResetRequired) => break,
-            Err(e) => { if written > 0 { break } else { bail!("The audio could not be read ({e}).") } }
+            Err(symphonia::core::errors::Error::ResetRequired) => { crate::paths::log(&format!("reset required at {:.1}s", written as f64 / RATE as f64)); break }
+            Err(e) => { crate::paths::log(&format!("decode stopped at {:.1}s: {e}", written as f64 / RATE as f64)); if written > 0 { break } else { bail!("The audio could not be read ({e}).") } }
         };
         if packet.track_id() != track_id { continue; }
         let decoded = match decoder.decode(&packet) { Ok(d) => d, Err(symphonia::core::errors::Error::DecodeError(_)) => continue, Err(e) => bail!("Decode error: {e}") };
         let ch = decoded.spec().channels.count();
+        let r = decoded.spec().rate as f64;
+        if r > 0.0 && r != rate {
+            if rate > 0.0 { crate::paths::log(&format!("audio rate changed {rate} → {r}")); }
+            rate = r; rs = Resampler::new(rate, RATE as f64); win = (rate / 10.0) as usize;
+            if (rate - container_rate).abs() > 1.0 { crate::paths::log(&format!("decoder outputs {rate} Hz (container says {container_rate} Hz)")); }
+        }
         let mut buf = SampleBuffer::<f32>::new(decoded.capacity() as u64, *decoded.spec());
         buf.copy_interleaved_ref(decoded);
         let s = buf.samples();
@@ -194,5 +203,16 @@ mod format_tests {
             eprintln!("{f}: {:.2}s", p.duration);
             assert!((p.duration - 36.0).abs() < 1.0, "{f} duration {}", p.duration);
         }
+    }
+}
+
+#[cfg(test)]
+mod user_file_test {
+    #[test]
+    fn decode_user_file() {
+        let Ok(p) = std::env::var("OMN_TEST_FILE") else { return };
+        let out = std::env::temp_dir().join("omn-user.wav");
+        let r = super::prepare(std::path::Path::new(&p), &out, false, &|| false, |_| {});
+        match r { Ok(x) => eprintln!("decoded {:.1}s", x.duration), Err(e) => eprintln!("error: {e}") }
     }
 }

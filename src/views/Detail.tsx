@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { save, confirm } from "@tauri-apps/plugin-dialog";
-import { api, ActionItem, Detail, Template, clock, duration, dateText, speakerName, errText } from "../api";
+import { api, ActionItem, Detail, Template, clock, duration, dateText, speakerName, errText, approx } from "../api";
 import { Markdown, wordCount } from "../components/Markdown";
 import { MindMap } from "../components/MindMap";
 import { AskView } from "./Ask";
@@ -31,10 +31,12 @@ export function MeetingDetail({ id, ctx, onDeleted }: { id: string; ctx: Ctx; on
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(1);
   const [peaks, setPeaks] = useState<number[]>([]);
+  const [est, setEst] = useState<number | null>(null);
 
   const load = () => api.detail(id).then(x => { setD(x); setTitle(x.meeting.title); });
   useEffect(() => { load(); api.peaks(id).then(setPeaks).catch(() => {}); }, [id]);
   useEffect(() => { load(); }, [ctx.meetings]);
+  useEffect(() => { if (d && ["recorded", "interrupted", "queued", "failed"].includes(d.meeting.status)) api.estimate(id).then(e => setEst(e.seconds)).catch(() => {}); }, [d?.meeting.status, d?.meeting.duration]);
   useEffect(() => { if (audio.current) audio.current.playbackRate = rate; }, [rate]);
   if (!d) return <div className="center muted">Loading…</div>;
   const m = d.meeting;
@@ -55,9 +57,11 @@ export function MeetingDetail({ id, ctx, onDeleted }: { id: string; ctx: Ctx; on
       </div>
       <div className="muted small">{dateText(m.createdAt)} · {duration(m.duration)} · {m.source === "imported" ? m.originalFileName : "Recorded"}{m.stereoSources ? " · Me + remote" : ""}</div>
       <TagEditor tags={m.tags} onChange={tags => save_({ tags })} />
-      {busy ? <div className="notice"><div className="bar wide"><div style={{ width: `${ctx.progress.fraction * 100}%` }} /></div><span>{ctx.progress.stage}</span><span className="local">🔒 on this computer</span><button onClick={() => api.cancel(id)}>Cancel</button></div>
+      {(busy || queued || m.status === "recorded") && ((busy ? ctx.progress.etaSeconds : est) ?? 0) > 1800 &&
+        <div className="tip">⏾ This will take about {approx((busy ? ctx.progress.etaSeconds : est) ?? 0)} — fine to leave running overnight. Keep the computer plugged in; it stays awake while processing (closing a laptop lid may still put it to sleep).</div>}
+      {busy ? <div className="notice"><div className="bar wide"><div style={{ width: `${ctx.progress.fraction * 100}%` }} /></div><span>{ctx.progress.stage}</span>{ctx.progress.etaSeconds ? <span className="muted small">about {approx(ctx.progress.etaSeconds)} left</span> : null}<span className="local" title="The computer is kept awake until processing finishes.">🔒 on this computer · staying awake</span><button onClick={() => api.cancel(id)}>Cancel</button></div>
         : queued ? <div className="notice">Queued — another meeting is being processed. <button onClick={() => api.cancel(id)}>Cancel</button></div>
-        : m.status === "recorded" ? <div className="notice">This recording hasn't been transcribed yet. <button className="primary" onClick={() => api.process(id, "full")}>Transcribe & Summarize</button></div>
+        : m.status === "recorded" ? <div className="notice">This recording hasn't been transcribed yet.{est ? ` Estimated time on this computer: about ${approx(est)}.` : ""} <button className="primary" onClick={() => api.process(id, "full")}>Transcribe & Summarize</button></div>
         : m.status === "interrupted" ? <div className="notice warn">{m.statusDetail || "Processing was interrupted."} <button className="primary" onClick={() => api.process(id, "full")}>Resume</button></div>
         : m.status === "failed" ? <div className="notice err">{m.statusDetail} <button className="primary" onClick={() => api.process(id, "full")}>Retry</button>{d.segments.length > 0 && <button onClick={() => api.process(id, "summarize", m.templateId)}>Retry Summary Only</button>}</div>
         : m.status === "transcribed" ? <div className="notice">{m.statusDetail || "Transcript ready — no AI summary yet."} <button className="primary" onClick={() => api.process(id, "summarize", m.templateId)}>Summarize</button></div>
@@ -92,7 +96,7 @@ function MoreMenu({ d, ctx, onDeleted, save_ }: { d: Detail; ctx: Ctx; onDeleted
   const m = d.meeting;
   return <div className="menuwrap"><button onClick={() => setOpen(!open)}>⋯</button>{open && <div className="menu" onMouseLeave={() => setOpen(false)}>
     <button onClick={() => { api.process(m.id, "full"); setOpen(false); }}>Transcribe & Summarize</button>
-    <button onClick={async () => { if (await confirm("Re-transcribe this meeting from the beginning? Edits to the transcript will be replaced.")) api.process(m.id, "transcribe"); setOpen(false); }}>Re-transcribe from Beginning</button>
+    <button onClick={async () => { if (await confirm("Re-transcribe this meeting from the beginning and rebuild its summary and TL;DR? Edits to the transcript will be replaced.")) api.process(m.id, "transcribe"); setOpen(false); }}>Re-transcribe from Beginning</button>
     <div className="menulabel">Move to collection</div>
     <button onClick={() => save_({ collectionId: null })}>None</button>
     {ctx.collections.map(c => <button key={c.id} onClick={() => save_({ collectionId: c.id })}>{c.name}{m.collectionId === c.id ? " ✓" : ""}</button>)}

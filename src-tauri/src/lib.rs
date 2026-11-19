@@ -11,6 +11,8 @@ mod recorder;
 mod settings;
 mod sysinfo;
 mod updates;
+mod awake;
+mod estimate;
 
 use db::Db;
 use models::*;
@@ -130,12 +132,21 @@ async fn record_stop(app: AppHandle, st: State<'_, AppState>, notes: String, hig
 #[tauri::command]
 fn process(app: AppHandle, st: State<AppState>, id: String, kind: String, template_id: Option<String>) {
     let k = match kind.as_str() { "transcribe" => {
-        if let Some(mut m) = st.db.lock().unwrap().meeting(&id) { m.transcribed_until = 0.0; let _ = st.db.lock().map(|d| d.save_meeting(&m)); }
-        Kind::TranscribeOnly }
+        // Re-transcribe from the beginning, then rebuild the summary and TL;DR from the new transcript.
+        let maybe = st.db.lock().unwrap().meeting(&id);
+        if let Some(mut m) = maybe { m.transcribed_until = 0.0; let _ = st.db.lock().unwrap().save_meeting(&m); }
+        Kind::Full }
         "summarize" => Kind::Summarize(template_id.unwrap_or_else(|| "general".into())), _ => Kind::Full };
     processor::enqueue(app, st.proc_.clone(), st.db.clone(), id, k);
 }
 #[tauri::command] fn process_cancel(app: AppHandle, st: State<AppState>, id: String) { processor::cancel(&app, &st.proc_, &st.db, &id) }
+#[tauri::command]
+fn estimate(st: State<AppState>, id: String) -> R<Value> {
+    let m = st.db.lock().unwrap().meeting(&id).ok_or("Meeting not found")?;
+    let remaining = (m.duration - m.transcribed_until).max(0.0);
+    let summarize = settings::get().auto_summarize && settings::llm_path().is_some();
+    Ok(json!({ "seconds": estimate::total_secs(m.duration, remaining, summarize), "awake": cfg!(any(windows, target_os = "macos")) }))
+}
 #[tauri::command] fn progress_get(st: State<AppState>) -> processor::Progress { st.proc_.snapshot() }
 
 // ---------------------------------------------------------------- editing
@@ -335,7 +346,7 @@ pub fn run() {
             segment_update, speaker_set, highlight_add, highlight_delete, summary_update, tldr_save, action_save, action_delete, actions_all,
             templates_list, custom_templates, template_save, template_delete, collection_save, collection_delete,
             ask, ask_cancel, chat_get, chat_clear, mindmap_generate, tldr_generate, export_file, export_markdown, export_text, export_audio, peaks,
-            print_page, write_base64, check_update, app_version, models_state, model_download, model_cancel, model_delete, model_import, llm_test
+            print_page, write_base64, check_update, app_version, estimate, models_state, model_download, model_cancel, model_delete, model_import, llm_test
         ])
         .run(tauri::generate_context!())
         .expect("error while running OpenMeeting Notes");

@@ -22,6 +22,15 @@ Replaces the macOS-only SwiftUI app (kept as reference in the earlier OpenMeetin
 - Import decoding verified for MP3, M4A/AAC, MP4 (video), FLAC, WAV (symphonia).
 - CI: macos-14 runner no longer supported → macos-latest (if that still fails, use macos-15).
 
+## 1.3.0 (2026-11-18)
+- Bug from a real 61-min Windows test: HE-AAC (phone recordings) decoded by symphonia at 24 kHz while the container says 48 kHz → audio treated as 2× speed, half duration, partial transcript. Fix: resampler follows decoded buffer rate. Verified on the user's file: 3699.3 s, envelope correlation 0.979 vs ffmpeg at start/middle/end.
+- Re-transcribe now resets and runs the full pipeline (re-summarize + TL;DR) and corrects stored duration.
+
+## 1.4.0 (2026-11-18)
+- awake.rs: ref-counted keep-awake guard (Windows SetThreadExecutionState on a helper thread; macOS /usr/bin/caffeinate -i -m -w pid; no-op elsewhere). Held for each recording session and for the processing queue. Windows API names checked against windows-sys 0.59 source (Windows target can't be compiled in the sandbox).
+- estimate.rs: per-model transcription speed, learned from every finished 10-min pass (smoothed), defaults by model/GPU; summary-time heuristic. Command `estimate(id)`; Progress carries etaSeconds per stage (transcribing / summarizing). UI: estimate before processing, "about N left" while running, overnight tip if > 30 min.
+- README "practical limits" (from chat): ~175 MB/hr recorded (350 stereo), whole-file 16 kHz load comfortable to ~4–5 h, WAV cap ~11 h per recording.
+
 ## Next steps
 1. User pushes repo to GitHub, runs "Build installers"; fix CI failures from logs.
 2. Mac system-audio capture (ScreenCaptureKit) for parity with the Swift app.

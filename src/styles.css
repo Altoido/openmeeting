@@ -72,3 +72,4 @@ a { color:var(--accent); cursor:pointer; } code { font-size:12px; } .mono { font
 #print-root { display:none; }
 @media print { #root { display:none; } #print-root { display:block; color:#000; } .printdoc { font-size:11pt; } .printdoc h1 { font-size:18pt; margin:0; } .printdoc .sub { color:#555; margin-bottom:10pt; } .md h2 { color:#1f3a5f; } @page { margin:0.6in; } }
 .updatebar { display:flex; gap:10px; align-items:center; padding:9px 16px; background:var(--accent-weak); border-bottom:1px solid var(--line); }
+.tip { margin-top:6px; padding:8px 12px; border-radius:8px; background:#8b4fd118; font-size:13px; }

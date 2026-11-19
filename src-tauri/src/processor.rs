@@ -14,7 +14,8 @@ pub enum Kind { Full, TranscribeOnly, Summarize(String) }
 
 #[derive(Serialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct Progress { pub meeting_id: Option<String>, pub stage: String, pub fraction: f64, pub queued: Vec<String> }
+pub struct Progress { pub meeting_id: Option<String>, pub stage: String, pub fraction: f64, pub queued: Vec<String>, pub eta_seconds: Option<f64>, pub started: f64,
+    #[serde(skip)] pub phase: String, #[serde(skip)] pub after_phase: f64, #[serde(skip)] pub duration: f64 }
 
 pub struct Processor {
     pub queue: Mutex<VecDeque<(String, Kind)>>,
@@ -69,12 +70,19 @@ fn pump(app: AppHandle, proc_: Arc<Processor>, db: Arc<Mutex<Db>>) {
         *r = true;
     }
     tauri::async_runtime::spawn(async move {
+        let _awake = crate::awake::hold("processing meetings");
         loop {
             let job = proc_.queue.lock().unwrap().pop_front();
             let Some((id, kind)) = job else { break };
             let (tx, rx) = tokio::sync::watch::channel(false);
             *proc_.cancel.lock().unwrap() = Some(tx);
-            *proc_.current.lock().unwrap() = Progress { meeting_id: Some(id.clone()), stage: "Starting…".into(), fraction: 0.0, queued: vec![] };
+            let est = db.lock().unwrap().meeting(&id).map(|m| crate::estimate::total_secs(m.duration, (m.duration - m.transcribed_until).max(0.0),
+                matches!(kind, Kind::Summarize(_)) || (crate::settings::get().auto_summarize && crate::settings::llm_path().is_some())));
+            let est = if let Kind::Summarize(_) = kind { db.lock().unwrap().meeting(&id).map(|m| crate::estimate::summary_secs(m.duration)) } else { est };
+            let dur = db.lock().unwrap().meeting(&id).map(|m| m.duration).unwrap_or(0.0);
+            let summarize_after = kind == Kind::Full && crate::settings::get().auto_summarize && crate::settings::llm_path().is_some();
+            *proc_.current.lock().unwrap() = Progress { meeting_id: Some(id.clone()), stage: "Starting…".into(), fraction: 0.0, queued: vec![], eta_seconds: est,
+                started: crate::db::now(), phase: String::new(), after_phase: if summarize_after { crate::estimate::summary_secs(dur) } else { 0.0 }, duration: dur };
             let res = run(&app, &proc_, &db, &id, kind, rx.clone()).await;
             if let Err(e) = res {
                 if *rx.borrow() || e.to_string() == "cancelled" { restore(&db, &id, "Cancelled. Your recording is safe — you can resume any time."); }
@@ -90,7 +98,15 @@ fn pump(app: AppHandle, proc_: Arc<Processor>, db: Arc<Mutex<Db>>) {
 fn set(app: &AppHandle, proc_: &Arc<Processor>, db: &Arc<Mutex<Db>>, id: &str, status: &str, stage: &str, f: f64) {
     let mut c = proc_.current.lock().unwrap();
     let changed = c.stage != stage || (f - c.fraction).abs() >= 0.01;
+    // Each stage has its own 0→1 progress, so time-remaining is estimated per stage.
+    let phase = if status == "summarizing" { "summarizing" } else { "transcribing" };
+    if c.phase != phase {
+        c.phase = phase.into(); c.started = crate::db::now();
+        if phase == "summarizing" { c.after_phase = 0.0; c.eta_seconds = Some(crate::estimate::summary_secs(c.duration)); }
+    }
     c.stage = stage.into(); c.fraction = f;
+    let elapsed = crate::db::now() - c.started;
+    if f > 0.08 && elapsed > 20.0 { c.eta_seconds = Some(elapsed * (1.0 - f) / f + c.after_phase); }
     drop(c);
     if changed {
         db.lock().unwrap().set_status(id, status, stage, f);
@@ -124,7 +140,7 @@ async fn transcribe(app: &AppHandle, p: &Arc<Processor>, db: &Arc<Mutex<Db>>, id
     let (app2, p2, db2, id2) = (app.clone(), p.clone(), db.clone(), id.to_string());
     let prepared = tokio::task::spawn_blocking(move || audio::prepare(&a2, &w2, stereo, &|| *c2.borrow(),
         |f| set(&app2, &p2, &db2, &id2, "preparing", "Preparing audio…", f * 0.05))).await??;
-    if m.duration <= 0.0 { m.duration = prepared.duration; db.lock().unwrap().save_meeting(&m)?; }
+    if (m.duration - prepared.duration).abs() > 2.0 { m.duration = prepared.duration; db.lock().unwrap().save_meeting(&m)?; }
     let (samples, rate) = audio::read_wav_mono(&wav)?;
     let dur = prepared.duration;
     let mut bounds = vec![0.0];
@@ -149,10 +165,12 @@ async fn transcribe(app: &AppHandle, p: &Arc<Processor>, db: &Arc<Mutex<Db>>, id
         let a = (start * rate as f64) as usize; let b = ((end * rate as f64) as usize).min(samples.len());
         audio::write_wav(&pass, &samples[a..b], rate)?;
         let (app2, p2, db2, id2, l2) = (app.clone(), p.clone(), db.clone(), id.to_string(), label.clone());
+        let pass_started = std::time::Instant::now();
         let raw = engines::transcribe(&pass, &model, &lang, Some(&prev), vad.as_deref(), &cancel,
             move |f| set(&app2, &p2, &db2, &id2, "transcribing", &l2, base + span * f)).await;
         let _ = std::fs::remove_file(&pass);
         let raw = raw?;
+        crate::estimate::record_transcribe(end - start, pass_started.elapsed().as_secs_f64());
         let segs: Vec<(f64, f64, String, Option<String>)> = raw.into_iter().filter_map(|r| {
             let s = (r.start + start).max(start);
             let e = (r.end + start).min(end + 2.0).max(s);

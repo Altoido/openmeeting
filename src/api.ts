@@ -19,7 +19,7 @@ export interface Detail {
   tldr: { markdown: string; model: string; createdAt: number } | null; actions: ActionItem[]; highlights: Highlight[]; mindmap: MindNode | null; chat: Chat[];
 }
 export interface Template { id: string; name: string; icon: string; description: string; instructions: string }
-export interface Progress { meetingId?: string | null; stage: string; fraction: number; queued: string[] }
+export interface Progress { meetingId?: string | null; stage: string; fraction: number; queued: string[]; etaSeconds?: number | null }
 export interface RecStatus { active: boolean; paused: boolean; elapsed: number; micLevel: number; systemLevel: number; warning?: string | null; meetingId?: string | null }
 export interface Settings {
   whisperModel: string; llmModel: string; useVad: boolean; language: string; autoTranscribe: boolean; autoSummarize: boolean; autoTitle: boolean;
@@ -52,6 +52,7 @@ export const api = {
   process: (id: string, kind: "full" | "transcribe" | "summarize", templateId?: string) => invoke("process", { id, kind, templateId }),
   cancel: (id: string) => invoke("process_cancel", { id }),
   progress: () => invoke<Progress>("progress_get"),
+  estimate: (id: string) => invoke<{ seconds: number; awake: boolean }>("estimate", { id }),
   segment: (meetingId: string, segId: number, o: { text?: string; speaker?: string | null; setSpeaker?: boolean; revert?: boolean }) =>
     invoke("segment_update", { meetingId, segId, text: o.text ?? null, speaker: o.speaker ?? null, setSpeaker: !!o.setSpeaker, revert: !!o.revert }),
   speaker: (meetingId: string, key: string, name: string) => invoke("speaker_set", { meetingId, key, name }),
@@ -101,3 +102,5 @@ export const speakerName = (key: string | null | undefined, names: Record<string
   return /^S\d+$/.test(key) ? `Speaker ${key.slice(1)}` : key;
 };
 export const errText = (e: unknown) => typeof e === "string" ? e : (e as Error)?.message ?? String(e);
+export const approx = (sec: number) => { const m = Math.max(1, Math.round(sec / 60)); if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60), r = Math.round((m % 60) / 5) * 5; return r ? `${h} hr ${r} min` : `${h} hr`; };
